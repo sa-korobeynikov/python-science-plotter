@@ -28,7 +28,7 @@ class DataManager:
                     tmp_data.append([])
                     tmp_data[i].append(float(tmp_line[i]))
                 line = None
-                while len(line) != '':
+                while line != '':
                     line = f_data.readline()
                     if line == "\n" or line == '':
                         if len(tmp_data[0]) != 0:
