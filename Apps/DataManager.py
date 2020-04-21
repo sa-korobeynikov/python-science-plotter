@@ -3,13 +3,11 @@ import os
 
 
 class DataManager:
-    cfg = None
-    coordinates = None
-    data = None
-
     def __init__(self, config_file):
         self.data = []
         self.coordinates = []
+        self.parameters_names = []
+        self.parameters = []
 
         with open(config_file) as f_cfg:
             self.cfg = json.load(f_cfg)
@@ -40,14 +38,31 @@ class DataManager:
                 f_data.close()
             self.data.append(data_plot.copy())
 
+        for par in self.cfg['parameters_names']:
+            self.parameters_names.append(par)
+
+        if self.parameters_names:
+            with open(os.path.dirname(config_file) + '\\parameters_val.dat', 'r') as f_params:
+                line = f_params.readline()[:-1]
+                while line != '':
+                    params = line.split(' ')
+                    self.parameters.append(params)
+                    line = f_params.readline()[:-1]
+
     def get_frames_count(self):
         return len(self.data[0])
 
     def get_frame(self, subplot, tick):
         return self.coordinates[subplot], self.data[subplot][tick]
 
+    def get_params(self, tick):
+        return self.parameters[tick]
+
     def get_subplots_num(self):
         return len(self.data)
 
     def get_plots_num(self, subplot):
         return len(self.data[subplot][0])
+
+    def get_params_num(self):
+        return len(self.parameters_names)

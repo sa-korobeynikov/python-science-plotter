@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.data_mngr_thread = DataLoadThread(self.signals.thread_finished)
         self.signals.thread_finished.connect(self.init_plot)
 
-        self.DM = None
+        self.DM: 'DataManager' = None
 
     def init_plot(self):
         self.DM = self.data_mngr_thread.DM
@@ -72,6 +72,17 @@ class MainWindow(QtWidgets.QMainWindow):
             for j in range(DM.get_plots_num(i)):
                 self.plots_data[i].append(self.subplots_data[i].plot(x, y[j], pen='k'))
 
+
+        self.mainUI.parameters_table.setRowCount(0)
+        self.mainUI.parameters_table.setRowCount(DM.get_params_num())
+        params_vals = DM.get_params(0)
+        for i, par_name in enumerate(DM.parameters_names):
+            self.mainUI.parameters_table.setItem(i, 0, QtWidgets.QTableWidgetItem(par_name))
+            self.mainUI.parameters_table.setItem(i, 1, QtWidgets.QTableWidgetItem(params_vals[i]))
+            self.mainUI.parameters_table.item(i, 0).setFlags(QtCore.Qt.ItemIsEnabled)
+            self.mainUI.parameters_table.item(i, 1).setFlags(QtCore.Qt.ItemIsEnabled)
+
+
     def update_plot(self, tick=-1):
         if tick == -1:
             tick = self.current_frame + 1
@@ -85,10 +96,15 @@ class MainWindow(QtWidgets.QMainWindow):
             for j in range(DM.get_plots_num(i)):
                 self.plots_data[i][j].setData(x, y[j])
 
+
         self.set_current_frame_lineedit()
         self.mainUI.frames_slider.blockSignals(True)
         self.mainUI.frames_slider.setValue(tick)
         self.mainUI.frames_slider.blockSignals(False)
+
+        for i, param_val in enumerate(self.DM.get_params(tick)):
+            self.mainUI.parameters_table.setItem(i, 1, QtWidgets.QTableWidgetItem(param_val))
+
 
     def set_current_frame_lineedit(self):
         self.mainUI.frames_counter.setText("{} / {}".format(self.current_frame, self.num_frames))
@@ -126,6 +142,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mainUI.fps_sb.setEnabled(status)
         mainUI.open_cfg_file_button.setEnabled(status)
+        mainUI.parameters_table.setEnabled(status)
 
     def load_data(self):
         self.timer.stop()

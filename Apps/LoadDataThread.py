@@ -5,7 +5,7 @@ class DataLoadThread(QThread):
     def __init__(self, signal: 'pyqtSignal'):
         QThread.__init__(self)
         self.__signal = signal
-        self.DM = None
+        self.DM: 'DataManager' = None
         self.filename = ''
 
     def set_filename(self, filename):

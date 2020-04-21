@@ -83,6 +83,20 @@ class Ui_MainWindow(object):
         self.plot_widget = GraphicsLayoutWidget(self.centralwidget)
         self.plot_widget.setGeometry(QtCore.QRect(0, 0, 980, 590))
         self.plot_widget.setObjectName("plot_widget")
+        self.parameters_table = QtWidgets.QTableWidget(self.centralwidget)
+        self.parameters_table.setEnabled(False)
+        self.parameters_table.setGeometry(QtCore.QRect(530, 640, 261, 171))
+        self.parameters_table.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.parameters_table.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.parameters_table.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.parameters_table.setObjectName("parameters_table")
+        self.parameters_table.setColumnCount(2)
+        self.parameters_table.setRowCount(0)
+        item = QtWidgets.QTableWidgetItem()
+        self.parameters_table.setHorizontalHeaderItem(0, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.parameters_table.setHorizontalHeaderItem(1, item)
+        self.parameters_table.verticalHeader().setVisible(False)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -97,6 +111,10 @@ class Ui_MainWindow(object):
         self.frames_counter.setText(_translate("MainWindow", "0 / 0"))
         self.open_cfg_file_button.setText(_translate("MainWindow", "Open file"))
         self.load_data_button.setText(_translate("MainWindow", "Load data"))
+        item = self.parameters_table.horizontalHeaderItem(0)
+        item.setText(_translate("MainWindow", "Parameter"))
+        item = self.parameters_table.horizontalHeaderItem(1)
+        item.setText(_translate("MainWindow", "Value"))
 from pyqtgraph import GraphicsLayoutWidget
 
 
