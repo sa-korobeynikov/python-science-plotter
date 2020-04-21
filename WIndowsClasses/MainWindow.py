@@ -1,9 +1,12 @@
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QFileDialog
+
 
 from Forms.MainWindowForm import Ui_MainWindow
 
 from Apps.DataManager import DataManager
+from Apps.LoadDataThread import DataLoadThread
+from Apps.Signals import Signals
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -32,11 +35,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plots_data = []
         self.current_frame = 0
         self.num_frames = 0
+        self.signals = Signals()
+
+        self.data_mngr_thread = DataLoadThread(self.signals.thread_finished)
+        self.signals.thread_finished.connect(self.init_plot)
 
         self.DM = None
 
     def init_plot(self):
+        self.DM = self.data_mngr_thread.DM
         DM = self.DM
+
+        self.mainUI.frames_slider.setValue(0)
+
+        self.num_frames = self.DM.get_frames_count() - 1
+        self.current_frame = 0
+        self.set_current_frame_lineedit()
+
+        self.mainUI.frames_slider.setMinimum(0)
+        self.mainUI.frames_slider.setMaximum(self.num_frames)
+        self.set_enabled(True)
 
         for i in self.subplots_data:
             self.mainUI.plot_widget.removeItem(i)
@@ -96,40 +114,27 @@ class MainWindow(QtWidgets.QMainWindow):
             filename = dlg.selectedFiles()
             filename = filename[0]
             self.mainUI.file_path.setText(filename)
+            self.mainUI.load_data_button.setEnabled(True)
+
+    def set_enabled(self, status: 'bool'):
+        mainUI = self.mainUI
+        mainUI.run_button.setEnabled(status)
+        mainUI.stop_button.setEnabled(status)
+
+        mainUI.frames_counter.setEnabled(status)
+        mainUI.frames_slider.setEnabled(status)
+
+        mainUI.fps_sb.setEnabled(status)
+        mainUI.open_cfg_file_button.setEnabled(status)
 
     def load_data(self):
-        mainUI = self.mainUI
-
         self.timer.stop()
+        self.set_enabled(False)
+        QtWidgets.QApplication.processEvents()
+
         filename = self.mainUI.file_path.text()
-
-        mainUI.run_button.setEnabled(False)
-        mainUI.stop_button.setEnabled(True)
-
-        mainUI.frames_counter.setEnabled(False)
-        mainUI.frames_slider.setEnabled(False)
-
-        mainUI.fps_sb.setEnabled(False)
-
-        self.DM = DataManager(filename)
-
-        mainUI.run_button.setEnabled(True)
-        mainUI.stop_button.setEnabled(True)
-
-        mainUI.frames_counter.setEnabled(True)
-        mainUI.frames_slider.setEnabled(True)
-        self.mainUI.frames_slider.setValue(0)
-
-        mainUI.fps_sb.setEnabled(True)
-
-        self.num_frames = self.DM.get_frames_count() - 1
-        self.current_frame = 0
-        self.set_current_frame_lineedit()
-
-        self.mainUI.frames_slider.setMinimum(0)
-        self.mainUI.frames_slider.setMaximum(self.num_frames)
-
-        self.init_plot()
+        self.data_mngr_thread.set_filename(filename)
+        self.data_mngr_thread.start()
 
     def fps_change(self):
         val = self.mainUI.fps_sb.value()

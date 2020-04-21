@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Forms\designes\MainWindow.ui'
+# Form implementation generated from reading ui file 'designes\MainWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.2
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -48,6 +48,7 @@ class Ui_MainWindow(object):
         self.frames_counter.setAlignment(QtCore.Qt.AlignCenter)
         self.frames_counter.setObjectName("frames_counter")
         self.frames_slider = QtWidgets.QSlider(self.centralwidget)
+        self.frames_slider.setEnabled(False)
         self.frames_slider.setGeometry(QtCore.QRect(10, 600, 960, 22))
         self.frames_slider.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.frames_slider.setMaximum(1)
@@ -72,7 +73,7 @@ class Ui_MainWindow(object):
         self.file_path.setText("")
         self.file_path.setObjectName("file_path")
         self.load_data_button = QtWidgets.QPushButton(self.centralwidget)
-        self.load_data_button.setEnabled(True)
+        self.load_data_button.setEnabled(False)
         self.load_data_button.setGeometry(QtCore.QRect(20, 750, 75, 23))
         self.load_data_button.setObjectName("load_data_button")
         self.status_label = QtWidgets.QLabel(self.centralwidget)
