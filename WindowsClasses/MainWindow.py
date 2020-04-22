@@ -72,7 +72,6 @@ class MainWindow(QtWidgets.QMainWindow):
             for j in range(DM.get_plots_num(i)):
                 self.plots_data[i].append(self.subplots_data[i].plot(x, y[j], pen='k'))
 
-
         self.mainUI.parameters_table.setRowCount(0)
         self.mainUI.parameters_table.setRowCount(DM.get_params_num())
         params_vals = DM.get_params(0)
@@ -101,9 +100,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainUI.frames_slider.blockSignals(True)
         self.mainUI.frames_slider.setValue(tick)
         self.mainUI.frames_slider.blockSignals(False)
-
-        for i, param_val in enumerate(self.DM.get_params(tick)):
-            self.mainUI.parameters_table.setItem(i, 1, QtWidgets.QTableWidgetItem(param_val))
+        
+        if self.DM.get_params_num():
+            for i, param_val in enumerate(self.DM.get_params(tick)):
+                self.mainUI.parameters_table.setItem(i, 1, QtWidgets.QTableWidgetItem(param_val))
 
 
     def set_current_frame_lineedit(self):

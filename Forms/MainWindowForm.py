@@ -96,6 +96,7 @@ class Ui_MainWindow(object):
         self.parameters_table.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.parameters_table.setHorizontalHeaderItem(1, item)
+        self.parameters_table.horizontalHeader().setStretchLastSection(True)
         self.parameters_table.verticalHeader().setVisible(False)
         MainWindow.setCentralWidget(self.centralwidget)
 
