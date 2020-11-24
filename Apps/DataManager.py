@@ -1,19 +1,30 @@
 import json
 import os
+from typing import Optional, List, Dict, Union
 
 
 class DataManager:
+    __sbpl_settings: 'List[Optional[str]]'
+    __pl_settings: 'List[Dict[str, Union[str, List[int], None]]'
+
     def __init__(self, config_file):
         self.data = []
         self.coordinates = []
         self.parameters_names = []
         self.parameters = []
 
+        self.__sbpl_settings = []
+        self.__pl_settings = []
+
         with open(config_file) as f_cfg:
             self.cfg = json.load(f_cfg)
             f_cfg.close()
 
-        for f in self.cfg['data_files']:
+        for sb_key in self.cfg['plots_config']:
+            self.__sbpl_settings.append(self.cfg['plots_config'][sb_key]['title'])
+            self.__pl_settings.append(self.cfg['plots_config'][sb_key]['plots'])
+
+            f = self.cfg['plots_config'][sb_key]['filename']
             with open(os.path.dirname(config_file) + '\\' + f) as f_data:
                 data_plot = list()
                 coordinates = f_data.readline().split(' ')
@@ -66,3 +77,9 @@ class DataManager:
 
     def get_params_num(self):
         return len(self.parameters_names)
+
+    def get_subplot_title(self, i: 'int') -> 'Optional[str]':
+        return self.__sbpl_settings[i]
+
+    def get_plot_setting(self, i: 'int', j: 'int') -> 'Dict[str, Union[str, List[int], None]]':
+        return self.__pl_settings[i][j]

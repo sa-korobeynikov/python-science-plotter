@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QFileDialog
+import pyqtgraph as pg
 
 
 from Forms.MainWindowForm import Ui_MainWindow
@@ -33,6 +34,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.subplots_data = []
         self.plots_data = []
+        self.legends = []
         self.current_frame = 0
         self.num_frames = 0
         self.signals = Signals()
@@ -63,14 +65,51 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plots_data = []
 
         for i in range(DM.get_subplots_num()):
-            self.subplots_data.append(self.mainUI.plot_widget.addPlot(row=i, col=0, enableMenu=True))
+            sbpl_params = {
+                'row': i,
+                'col': 0,
+                'enableMenu': True,
+            }
+            sbpl_title = DM.get_subplot_title(i)
+            if sbpl_title is not None:
+                sbpl_params['title'] = sbpl_title
+
+            self.subplots_data.append(self.mainUI.plot_widget.addPlot(**sbpl_params))
             self.subplots_data[i].getAxis('bottom').setPen('k')
             self.subplots_data[i].getAxis('left').setPen('k')
 
             x, y = DM.get_frame(i, 0)
             self.plots_data.append([])
+
             for j in range(DM.get_plots_num(i)):
-                self.plots_data[i].append(self.subplots_data[i].plot(x, y[j], pen='k'))
+                pl_sett = DM.get_plot_setting(i, j)
+
+                pen_params = dict()
+                if pl_sett['color'] is not None:
+                    pen_params['color'] = tuple(pl_sett['color'])
+                else:
+                    pen_params['color'] = 'k'
+
+                if pl_sett['line_type'] is not None:
+                    line_type = pl_sett['line_type']
+                    if line_type == 'solid':
+                        pen_params['style'] = QtCore.Qt.SolidLine
+                    elif line_type == 'dash':
+                        pen_params['style'] = QtCore.Qt.DashLine
+                    elif line_type == 'dot':
+                        pen_params['style'] = QtCore.Qt.DotLine
+                    elif line_type == 'dashdot':
+                        pen_params['style'] = QtCore.Qt.DashDotLine
+                    elif line_type == 'dashdotdot':
+                        pen_params['style'] = QtCore.Qt.DashDotDotLine
+
+                pen_params['width'] = 1.5
+
+                self.plots_data[i].append(self.subplots_data[i].plot(x, y[j], pen=pg.mkPen(**pen_params)))
+
+        self.create_legend()
+
+
 
         self.mainUI.parameters_table.setRowCount(0)
         self.mainUI.parameters_table.setRowCount(DM.get_params_num())
@@ -105,6 +144,21 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.DM.get_params_num():
             for i, param_val in enumerate(self.DM.get_params(tick)):
                 self.mainUI.parameters_table.setItem(i, 1, QtWidgets.QTableWidgetItem(param_val))
+
+    def create_legend(self):
+        self.legends.clear()
+        for i in range(self.DM.get_subplots_num()):
+            self.legends.append(None)
+            for j in range(self.DM.get_plots_num(i)):
+                pl_sett = self.DM.get_plot_setting(i, j)
+                if pl_sett['title'] is not None:
+                    if self.legends[i] is None:
+                        legend = pg.LegendItem(offset=(60, 20))
+                        self.legends[i] = legend
+                        self.legends[i].setParentItem(self.subplots_data[i])
+                    self.legends[i].addItem(self.plots_data[i][j], name=pl_sett['title'])
+
+
 
 
     def set_current_frame_lineedit(self):
@@ -156,6 +210,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def fps_change(self):
         val = self.mainUI.fps_sb.value()
-        self.timer.stop()
-        self.timer.setInterval(1000//val)
-        self.timer.start()
+        if self.timer.isActive():
+            self.timer.stop()
+            self.timer.setInterval(1000//val)
+            self.timer.start()
+        else:
+            self.timer.setInterval(1000 // val)

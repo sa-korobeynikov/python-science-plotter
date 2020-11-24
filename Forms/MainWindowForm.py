@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'designes\MainWindow.ui'
+# Form implementation generated from reading ui file '.\Forms\designes\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -14,6 +14,9 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(980, 832)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/icons/icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.run_button = QtWidgets.QPushButton(self.centralwidget)
@@ -117,6 +120,7 @@ class Ui_MainWindow(object):
         item = self.parameters_table.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Value"))
 from pyqtgraph import GraphicsLayoutWidget
+from . import resource_rc
 
 
 if __name__ == "__main__":
