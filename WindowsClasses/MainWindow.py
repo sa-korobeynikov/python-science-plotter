@@ -1,6 +1,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QFileDialog
 import pyqtgraph as pg
+from functools import partial
 
 
 from Forms.MainWindowForm import Ui_MainWindow
@@ -44,6 +45,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.DM: 'DataManager' = None
 
+    def callback(self, point):
+        y = point.y()
+        h = self.mainUI.plot_widget.frameGeometry().height() // len(self.subplots_data)
+        sbpl_index = int(y//h)
+        if sbpl_index == len(self.subplots_data):
+            sbpl_index = len(self.subplots_data) - 1
+        p = self.subplots_data[sbpl_index].vb.mapSceneToView(point)
+        self.mainUI.x_pos.setText('x: {:0.6g}'.format(p.x()))
+        self.mainUI.y_pos.setText('y: {:0.6g}'.format(p.y()))
+
+
+
     def init_plot(self):
         self.DM = self.data_mngr_thread.DM
         DM = self.DM
@@ -78,6 +91,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.subplots_data[i].getAxis('bottom').setPen('k')
             self.subplots_data[i].getAxis('left').setPen('k')
 
+            self.subplots_data[i].scene().sigMouseMoved.connect(self.callback)
+
             x, y = DM.get_frame(i, 0)
             self.plots_data.append([])
 
@@ -106,6 +121,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 pen_params['width'] = 1.5
 
                 self.plots_data[i].append(self.subplots_data[i].plot(x, y[j], pen=pg.mkPen(**pen_params)))
+                # print(self.plots_data[i][j].scene())
+                # self.plots_data[i][j].scene().sigMouseMove.connect(lambda evt: print(123))
 
         self.create_legend()
 
@@ -120,6 +137,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.mainUI.parameters_table.setItem(i, 1, QtWidgets.QTableWidgetItem(params_vals[i]))
                 self.mainUI.parameters_table.item(i, 0).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.mainUI.parameters_table.item(i, 1).setFlags(QtCore.Qt.ItemIsEnabled)
+
+        self.mainUI.x_pos.setText('x: -')
+        self.mainUI.y_pos.setText('y: -')
 
 
     def update_plot(self, tick=-1):

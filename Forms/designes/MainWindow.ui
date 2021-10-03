@@ -259,6 +259,32 @@
      </property>
     </column>
    </widget>
+   <widget class="QLabel" name="x_pos">
+    <property name="geometry">
+     <rect>
+      <x>810</x>
+      <y>670</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>x: -</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="y_pos">
+    <property name="geometry">
+     <rect>
+      <x>810</x>
+      <y>690</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>y: -</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <customwidgets>
