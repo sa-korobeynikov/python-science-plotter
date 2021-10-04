@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Forms\designes\MainWindow.ui'
+# Form implementation generated from reading ui file '.\designes\MainWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -101,13 +101,10 @@ class Ui_MainWindow(object):
         self.parameters_table.setHorizontalHeaderItem(1, item)
         self.parameters_table.horizontalHeader().setStretchLastSection(True)
         self.parameters_table.verticalHeader().setVisible(False)
-        self.x_pos = QtWidgets.QLabel(self.centralwidget)
-        self.x_pos.setGeometry(QtCore.QRect(810, 670, 141, 20))
-        self.x_pos.setObjectName("x_pos")
-        self.y_pos = QtWidgets.QLabel(self.centralwidget)
-        self.y_pos.setGeometry(QtCore.QRect(810, 690, 141, 20))
-        self.y_pos.setObjectName("y_pos")
         MainWindow.setCentralWidget(self.centralwidget)
+        self.statusBar = QtWidgets.QStatusBar(MainWindow)
+        self.statusBar.setObjectName("statusBar")
+        MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -125,10 +122,8 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Parameter"))
         item = self.parameters_table.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "Value"))
-        self.x_pos.setText(_translate("MainWindow", "x: -"))
-        self.y_pos.setText(_translate("MainWindow", "y: -"))
 from pyqtgraph import GraphicsLayoutWidget
-from . import resource_rc
+from Forms import resource_rc
 
 
 if __name__ == "__main__":
