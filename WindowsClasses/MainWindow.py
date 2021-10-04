@@ -1,8 +1,9 @@
+from typing import List, Tuple, TYPE_CHECKING
+
 from PyQt5 import QtWidgets, QtCore, QtGui
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QLabel
 import pyqtgraph as pg
 from functools import partial
-
 
 from Forms.MainWindowForm import Ui_MainWindow
 
@@ -10,28 +11,33 @@ from Apps.DataManager import DataManager
 from Apps.LoadDataThread import DataLoadThread
 from Apps.Signals import Signals
 
+if TYPE_CHECKING:
+    from PyQt5.QtWidgets import QStatusBar
+
 
 class MainWindow(QtWidgets.QMainWindow):
+    subplot_data: 'List'
+    plots_data: 'List'
+    legends: 'List'
+    current_frame: 'int'
+    num_frames: 'int'
+    signals: 'Signals'
+    file_path: 'str'
+
+    statusbar: 'QStatusBar'
+    statusbar_filepath: 'QLabel'
+    statusbar_xpos: 'QLabel'
+    statusbar_ypos: 'QLabel'
+
+    resized = QtCore.pyqtSignal()
+    old_size: 'Tuple'
+
     def __init__(self):
         super(MainWindow, self).__init__()
         self.mainUI = Ui_MainWindow()
         self.mainUI.setupUi(self)
 
         self.mainUI.plot_widget.setBackground('w')
-
-        self.mainUI.run_button.clicked.connect(self.run_timer)
-        self.mainUI.stop_button.clicked.connect(self.stop_timer)
-
-        self.mainUI.open_cfg_file_button.clicked.connect(self.open_cfg_file)
-        self.mainUI.load_data_button.clicked.connect(self.load_data)
-
-        self.mainUI.fps_sb.valueChanged.connect(self.fps_change)
-
-        self.mainUI.frames_slider.valueChanged.connect(self.on_slider_changed)
-
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(40)
-        self.timer.timeout.connect(self.update_plot)
 
         self.subplots_data = []
         self.plots_data = []
@@ -40,22 +46,97 @@ class MainWindow(QtWidgets.QMainWindow):
         self.num_frames = 0
         self.signals = Signals()
 
+        self.file_path = ''
+
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(40)
+        self.timer.timeout.connect(self.update_plot)
+
+        self.old_size = self.geometry().height(), self.geometry().width()
+
+        self.__config_signals()
+        self.__config_status_bar()
+
         self.data_mngr_thread = DataLoadThread(self.signals.thread_finished)
         self.signals.thread_finished.connect(self.init_plot)
 
         self.DM: 'DataManager' = None
 
-    def callback(self, point):
-        y = point.y()
-        h = self.mainUI.plot_widget.frameGeometry().height() // len(self.subplots_data)
-        sbpl_index = int(y//h)
-        if sbpl_index == len(self.subplots_data):
-            sbpl_index = len(self.subplots_data) - 1
-        p = self.subplots_data[sbpl_index].vb.mapSceneToView(point)
-        self.mainUI.x_pos.setText('x: {:0.6g}'.format(p.x()))
-        self.mainUI.y_pos.setText('y: {:0.6g}'.format(p.y()))
+    def __config_signals(self):
+        self.mainUI.run_button.clicked.connect(self.run_timer)
+        self.mainUI.stop_button.clicked.connect(self.stop_timer)
 
+        self.mainUI.open_cfg_file_button.clicked.connect(self.select_file)
+        self.mainUI.load_data_button.clicked.connect(self.load_data)
 
+        self.mainUI.fps_sb.valueChanged.connect(self.fps_change)
+
+        self.mainUI.frames_slider.valueChanged.connect(self.on_slider_changed)
+
+        self.resized.connect(self.resize_main_window)
+
+    def __config_status_bar(self):
+        self.statusbar = self.statusBar()
+
+        self.statusbar_filepath = QLabel('-')
+        self.statusbar.addPermanentWidget(self.statusbar_filepath, stretch=True)
+
+        self.statusbar_xpos = QLabel('-')
+        self.statusbar_xpos.setFixedWidth(70)
+        self.statusbar.addPermanentWidget(self.statusbar_xpos)
+
+        self.statusbar_ypos = QLabel('-')
+        self.statusbar_ypos.setFixedWidth(70)
+        self.statusbar.addPermanentWidget(self.statusbar_ypos)
+
+    def resizeEvent(self, event):
+        self.resized.emit()
+        return super(MainWindow, self).resizeEvent(event)
+
+    def resize_main_window(self):
+        oh = self.old_size[0]
+        ow = self.old_size[1]
+
+        nh = self.geometry().height()
+        nw = self.geometry().width()
+
+        def newpos(obj):
+            obj.move(
+                obj.geometry().left() + (nw - ow),
+                obj.geometry().top(),
+            )
+
+        newpos(self.mainUI.open_cfg_file_button)
+        newpos(self.mainUI.load_data_button)
+        newpos(self.mainUI.parameters_table)
+        newpos(self.mainUI.run_button)
+        newpos(self.mainUI.stop_button)
+        newpos(self.mainUI.fps_sb)
+        newpos(self.mainUI.label_fps)
+        newpos(self.mainUI.frames_counter)
+
+        self.mainUI.plot_widget.resize(
+            self.mainUI.plot_widget.geometry().width() + (nw - ow),
+            self.mainUI.plot_widget.geometry().height() + (nh - oh),
+        )
+
+        self.mainUI.frames_slider.resize(
+            self.mainUI.frames_slider.geometry().width() + (nw - ow),
+            self.mainUI.frames_slider.geometry().height(),
+        )
+
+        self.mainUI.frames_slider.move(
+            self.mainUI.frames_slider.geometry().left(),
+            self.mainUI.frames_slider.geometry().top() + (nh - oh),
+        )
+
+        self.old_size = nh, nw
+
+    def get_pos(self, point):
+        pass
+
+    def select_file(self):
+        pass
 
     def init_plot(self):
         self.DM = self.data_mngr_thread.DM
@@ -90,8 +171,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.subplots_data.append(self.mainUI.plot_widget.addPlot(**sbpl_params))
             self.subplots_data[i].getAxis('bottom').setPen('k')
             self.subplots_data[i].getAxis('left').setPen('k')
+            self.subplots_data[i].showGrid(x=True, y=True)
 
-            self.subplots_data[i].scene().sigMouseMoved.connect(self.callback)
+            self.subplots_data[i].scene().sigMouseMoved.connect(self.get_pos)
 
             x, y = DM.get_frame(i, 0)
             self.plots_data.append([])
@@ -126,8 +208,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.create_legend()
 
-
-
         self.mainUI.parameters_table.setRowCount(0)
         self.mainUI.parameters_table.setRowCount(DM.get_params_num())
         if self.DM.get_params_num():
@@ -138,9 +218,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.mainUI.parameters_table.item(i, 0).setFlags(QtCore.Qt.ItemIsEnabled)
                 self.mainUI.parameters_table.item(i, 1).setFlags(QtCore.Qt.ItemIsEnabled)
 
-        self.mainUI.x_pos.setText('x: -')
-        self.mainUI.y_pos.setText('y: -')
-
+        self.statusbar_xpos.setText('x: -')
+        self.statusbar_ypos.setText('y: -')
 
     def update_plot(self, tick=-1):
         if tick == -1:
@@ -154,7 +233,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.plots_data.append([])
             for j in range(DM.get_plots_num(i)):
                 self.plots_data[i][j].setData(x, y[j])
-
 
         self.set_current_frame_lineedit()
         self.mainUI.frames_slider.blockSignals(True)
@@ -177,9 +255,6 @@ class MainWindow(QtWidgets.QMainWindow):
                         self.legends[i] = legend
                         self.legends[i].setParentItem(self.subplots_data[i])
                     self.legends[i].addItem(self.plots_data[i][j], name=pl_sett['title'])
-
-
-
 
     def set_current_frame_lineedit(self):
         self.mainUI.frames_counter.setText("{} / {}".format(self.current_frame, self.num_frames))
@@ -224,7 +299,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_enabled(False)
         QtWidgets.QApplication.processEvents()
 
-        filename = self.mainUI.file_path.text()
+        filename = self.file_path
         self.data_mngr_thread.set_filename(filename)
         self.data_mngr_thread.start()
 
@@ -232,7 +307,7 @@ class MainWindow(QtWidgets.QMainWindow):
         val = self.mainUI.fps_sb.value()
         if self.timer.isActive():
             self.timer.stop()
-            self.timer.setInterval(1000//val)
+            self.timer.setInterval(1000 // val)
             self.timer.start()
         else:
             self.timer.setInterval(1000 // val)
